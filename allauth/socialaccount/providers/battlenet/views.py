@@ -12,6 +12,7 @@ Resources:
 * The Battle.net API forum:
     https://us.battle.net/en/forum/15051532/
 """
+
 import requests
 
 from django.conf import settings
@@ -130,8 +131,10 @@ class BattleNetOAuth2Adapter(OAuth2Adapter):
         return self.battlenet_base_url + "/userinfo"
 
     def complete_login(self, request, app, token, **kwargs):
-        params = {"access_token": token.token}
-        response = requests.get(self.profile_url, params=params)
+        response = requests.get(
+            self.profile_url,
+            headers={"authorization": "Bearer %s" % (token.token)},
+        )
         data = _check_errors(response)
 
         # Add the region to the data so that we can have it in `extra_data`.
