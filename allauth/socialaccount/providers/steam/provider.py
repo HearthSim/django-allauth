@@ -57,6 +57,7 @@ class SteamOpenIDProvider(OpenIDProvider):
     name = "Steam"
     account_class = SteamAccount
     uses_apps = True
+    supports_redirect = True
 
     def __init__(self, request, app=None):
         if app is None:
@@ -98,6 +99,24 @@ class SteamOpenIDProvider(OpenIDProvider):
             "last_name": last_name,
             "full_name": full_name,
         }
+
+    def get_realm(self, request):
+        return self.get_settings().get(
+            "REALM", request.build_absolute_uri("/")
+        )
+
+    def redirect(self, request, process, next_url=None, data=None, **kwargs):
+        endpoint = STEAM_OPENID_URL
+        client = _openid_consumer(request, self, endpoint)
+        realm = self.get_realm(request)
+        auth_request = client.begin(endpoint)
+
+        self.stash_redirect_state(request, process, next_url, data, **kwargs)
+
+        redirect_url = auth_request.redirectURL(
+            realm, request.build_absolute_uri(reverse("steam_callback"))
+        )
+        return HttpResponseRedirect(redirect_url)
 
 
 provider_classes = [SteamOpenIDProvider]
