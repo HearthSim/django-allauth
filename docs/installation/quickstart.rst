@@ -133,6 +133,7 @@ the ``settings.py`` of your project::
         'allauth.socialaccount.providers.pocket',
         "allauth.socialaccount.providers.questrade",
         'allauth.socialaccount.providers.quickbooks',
+        'allauth.socialaccount.providers.recharge',
         'allauth.socialaccount.providers.reddit',
         'allauth.socialaccount.providers.robinhood',
         'allauth.socialaccount.providers.salesforce',

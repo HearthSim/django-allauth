@@ -120,6 +120,7 @@ Provider Specifics
    pocket
    questrade
    quickbooks
+   recharge
    reddit
    saml
    salesforce

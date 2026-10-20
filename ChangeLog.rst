@@ -17,6 +17,8 @@ Note worthy changes
 - The available reauthentication methods can now be configured using
   ``ACCOUNT_REAUTHENTICATION_METHODS``.
 
+- New provider: Recharge.
+
 
 Security notice
 ---------------
