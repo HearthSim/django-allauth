@@ -11,7 +11,8 @@
 Note worthy changes
 -------------------
 
-- ...
+- Reauthentication is now possible using a login code sent to a verified
+  email address or phone number.
 
 
 65.21.1 (2026-10-30)

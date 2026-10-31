@@ -13,7 +13,6 @@ from django.http import (
 )
 from django.urls import reverse, reverse_lazy
 from django.utils.decorators import method_decorator
-from django.utils.functional import cached_property
 from django.views.decorators.cache import never_cache
 from django.views.generic.edit import FormView
 
@@ -30,6 +29,9 @@ from allauth.account.mixins import (
     RedirectAuthenticatedUserMixin,
 )
 from allauth.account.stages import LoginByCodeStage
+from allauth.account.views._authentication_by_code import (
+    BaseConfirmAuthenticationCodeView,
+)
 from allauth.account.views._decorators import sensitive_post_parameters_m
 from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.core.ratelimit import RateLimited
@@ -130,7 +132,8 @@ def _login_by_code_urlname() -> str:
     ),
     name="dispatch",
 )
-class ConfirmLoginCodeView(NextRedirectMixin, FormView):
+class ConfirmLoginCodeView(BaseConfirmAuthenticationCodeView):
+    _process: flows.login_by_code.LoginCodeVerificationProcess
     form_class = ConfirmLoginCodeForm
     template_name = f"account/confirm_login_code.{app_settings.TEMPLATE_EXTENSION}"
 
@@ -146,33 +149,10 @@ class ConfirmLoginCodeView(NextRedirectMixin, FormView):
             return HttpResponseRedirect(reverse(_login_by_code_urlname()))
         return super().dispatch(request, *args, **kwargs)
 
-    @cached_property
-    def _action(self) -> str:
-        action = self.request.POST.get("action")
-        valid_actions = ["verify"]
-        if self._process.can_resend:
-            valid_actions.append("resend")
-        if action not in valid_actions:
-            action = "verify"
-        return action
-
     def get_form_class(self):
         if self._action == "resend":
             return Form
         return get_form_class(app_settings.FORMS, "confirm_login_code", self.form_class)
-
-    def get_form_kwargs(self) -> dict:
-        kwargs = super().get_form_kwargs()
-        if self._action == "resend":
-            pass
-        else:
-            kwargs["code"] = self._process.code
-        return kwargs
-
-    def form_valid(self, form) -> HttpResponse:
-        if self._action == "resend":
-            return self._resend_form_valid(form)
-        return self._verify_form_valid(form)
 
     def _resend_form_valid(self, form) -> HttpResponse:
         try:

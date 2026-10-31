@@ -194,6 +194,7 @@ can either lead to becoming directly authenticated, or, to followup flows:
 While authenticated, re-authentication may be required to safeguard the account when sensitive actions
 are performed. The re-authentication flows are the following:
 - Re-authenticate using password (`reauthenticate`).
+- Re-authenticate using a code sent to a verified email address or phone number (`reauthenticate_by_code`).
 - Re-authenticate using a 2FA authenticator (TOTP, recovery codes, or WebAuthn) (`mfa_reauthenticate`).
 
 

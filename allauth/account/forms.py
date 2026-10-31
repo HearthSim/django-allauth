@@ -807,6 +807,43 @@ class ConfirmEmailVerificationCodeForm(BaseConfirmCodeForm):
         return code
 
 
+class RequestReauthenticationCodeForm(forms.Form):
+    recipient = forms.ChoiceField(choices=[])
+
+    def __init__(self, *args, **kwargs) -> None:
+        user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+        recipients = flows.reauthentication.get_reauthentication_code_recipients(user)
+        choices = [
+            (value, value) for recipient in recipients for value in recipient.values()
+        ]
+        recipient_field = self.fields["recipient"]
+        assert isinstance(recipient_field, forms.ChoiceField)  # nosec
+        recipient_field.choices = choices
+
+    def clean(self) -> dict:
+        cleaned_data = super().clean() or {}
+        recipient = cleaned_data.get("recipient")
+        if recipient:
+            if not ratelimit.consume(
+                context.request,
+                action="request_login_code",
+                key=recipient.lower(),
+            ):
+                self.add_error(
+                    "recipient",
+                    get_adapter().validation_error("too_many_login_attempts"),
+                )
+                return cleaned_data
+            key = "email" if "@" in recipient else "phone"
+            cleaned_data[key] = recipient
+        return cleaned_data
+
+
+class ConfirmReauthenticationCodeForm(BaseConfirmCodeForm):
+    pass
+
+
 class ConfirmPasswordResetCodeForm(BaseConfirmCodeForm):
     pass
 

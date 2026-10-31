@@ -151,6 +151,10 @@ def test_deactivate_totp_with_reauthenticate(
     assert resp.status_code == HTTPStatus.UNAUTHORIZED
     assert resp.json()["data"]["flows"] == [
         {"id": "reauthenticate"},
+        {
+            "id": "reauthenticate_by_code",
+            "recipients": [{"email": user_with_totp.email}],
+        },
         {"id": "mfa_reauthenticate", "types": ["totp"]},
     ]
     assert Authenticator.objects.filter(user=user_with_totp).exists()

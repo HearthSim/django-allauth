@@ -50,6 +50,21 @@ def build_urlpatterns(client: Client) -> list[URLPattern | URLResolver]:
         auth_patterns.extend(
             [
                 path(
+                    "reauthenticate/code/request",
+                    views.RequestReauthenticationCodeView.as_api_view(client=client),
+                    name="request_reauthentication_code",
+                ),
+                path(
+                    "reauthenticate/code/confirm",
+                    views.ConfirmReauthenticationCodeView.as_api_view(client=client),
+                    name="confirm_reauthentication_code",
+                ),
+                path(
+                    "reauthenticate/code/resend",
+                    views.ResendReauthenticationCodeView.as_api_view(client=client),
+                    name="resend_reauthentication_code",
+                ),
+                path(
                     "password/",
                     include(
                         [

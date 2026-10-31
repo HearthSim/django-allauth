@@ -27,11 +27,14 @@
         </label>
         <textarea {% if attrs.required %}required{% endif %}
                   {% if attrs.rows %}rows="{{ attrs.rows }}"{% endif %}
-                  class="form-control"
+                  class="{% if attrs.errors %}is-invalid{% endif %} form-control"
                   name="{{ attrs.name }}"
                   {% if attrs.readonly %}readonly{% endif %}
                   id="{{ attrs.id }}"
                   {% if attrs.disabled %}disabled{% endif %}>{% slot value %}{% endslot %}</textarea>
+        {% if attrs.errors %}
+            {% for error in attrs.errors %}<div role="alert" class="invalid-feedback">{{ error }}</div>{% endfor %}
+        {% endif %}
     </div>
 {% elif attrs.type == "hidden" %}
     <input {% if attrs.required %}required{% endif %}
@@ -47,7 +50,9 @@
                 {% endslot %}
             </label>
         {% endif %}
-        <select id="{{ attrs.id }}" name="{{ attrs.name }}" class="form-select">
+        <select id="{{ attrs.id }}"
+                name="{{ attrs.name }}"
+                class="{% if attrs.errors %}is-invalid{% endif %} form-select">
             {% for option in attrs.choices %}
                 <option {% if option.0 == attrs.value %}selected{% endif %}
                         value="{{ option.0 }}">{{ option.1 }}</option>
@@ -58,6 +63,9 @@
                 {% slot label %}
                 {% endslot %}
             </label>
+        {% endif %}
+        {% if attrs.errors %}
+            {% for error in attrs.errors %}<div role="alert" class="invalid-feedback">{{ error }}</div>{% endfor %}
         {% endif %}
     </div>
 {% else %}

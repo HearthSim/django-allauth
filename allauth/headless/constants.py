@@ -22,6 +22,7 @@ class Flow(str, Enum):
     PROVIDER_SIGNUP = "provider_signup"
     PROVIDER_TOKEN = "provider_token"  # nosec
     REAUTHENTICATE = "reauthenticate"
+    REAUTHENTICATE_BY_CODE = "reauthenticate_by_code"
     SIGNUP = "signup"
     VERIFY_EMAIL = AccountLoginStageKey.VERIFY_EMAIL.value
     VERIFY_PHONE = AccountLoginStageKey.VERIFY_PHONE.value

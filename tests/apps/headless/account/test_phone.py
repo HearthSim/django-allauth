@@ -269,7 +269,16 @@ def test_reauthentication(
             content_type="application/json",
         )
         assert resp.status_code == HTTPStatus.UNAUTHORIZED
-        assert resp.json()["data"]["flows"] == [{"id": "reauthenticate"}]
+        assert resp.json()["data"]["flows"] == [
+            {"id": "reauthenticate"},
+            {
+                "id": "reauthenticate_by_code",
+                "recipients": [
+                    {"email": user_with_phone.email},
+                    {"phone": phone},
+                ],
+            },
+        ]
 
 
 def test_change_phone_to_conflicting(

@@ -373,6 +373,89 @@ paths:
               examples:
                 invalid_email:
                   $ref: "#/components/examples/IncorrectPassword"
+  /_allauth/{client}/v1/auth/reauthenticate/code/request:
+    post:
+      tags:
+        - "Authentication: Account"
+      summary: Request a reauthentication code
+      description: |
+        Send a reauthentication code to one of the verified email addresses or
+        the verified phone number listed on the `reauthenticate_by_code` flow.
+      parameters:
+        - $ref: "#/components/parameters/Client"
+        - $ref: "#/components/parameters/SessionToken"
+      requestBody:
+        $ref: "#/components/requestBodies/RequestReauthenticationCode"
+      responses:
+        "200":
+          $ref: "#/components/responses/StatusOK"
+        "400":
+          description: An input error occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Authentication"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+  /_allauth/{client}/v1/auth/reauthenticate/code/confirm:
+    post:
+      tags:
+        - "Authentication: Account"
+      summary: Confirm a reauthentication code
+      description: |
+        Complete the pending `reauthenticate_by_code` flow using the code sent
+        to the selected email address or phone number.
+      parameters:
+        - $ref: "#/components/parameters/Client"
+        - $ref: "#/components/parameters/SessionToken"
+      requestBody:
+        $ref: "#/components/requestBodies/ConfirmLoginCode"
+      responses:
+        "200":
+          $ref: "#/components/responses/AuthenticatedByCode"
+        "400":
+          description: An input error occurred.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          $ref: "#/components/responses/Authentication"
+        "409":
+          description: |
+            Conflict. The reauthentication by code flow is not pending.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictResponse"
+  /_allauth/{client}/v1/auth/reauthenticate/code/resend:
+    post:
+      tags:
+        - "Authentication: Account"
+      summary: Resend a reauthentication code
+      description: |
+        Send a new code for the pending `reauthenticate_by_code` flow.
+        Requires `ACCOUNT_LOGIN_BY_CODE_SUPPORTS_RESEND` to be enabled.
+      parameters:
+        - $ref: "#/components/parameters/Client"
+        - $ref: "#/components/parameters/SessionToken"
+      responses:
+        "200":
+          $ref: "#/components/responses/StatusOK"
+        "401":
+          $ref: "#/components/responses/Authentication"
+        "409":
+          description: |
+            Conflict. The reauthentication by code flow is not pending or can
+            no longer be resent.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConflictResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
   ######################################################################
   # Authentication: Password
   ######################################################################
@@ -1849,6 +1932,9 @@ components:
               type: totp
           flows:
             - id: reauthenticate
+            - id: reauthenticate_by_code
+              recipients:
+                - email: email@domain.org
             - id: mfa_reauthenticate
         meta:
           is_authenticated: true
@@ -1995,6 +2081,13 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/RequestLoginCode"
+    RequestReauthenticationCode:
+      description: Request a reauthentication code.
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/RequestReauthenticationCode"
     SetupTOTP:
       content:
         application/json:
@@ -2356,6 +2449,7 @@ components:
             - provider_signup
             - provider_token
             - reauthenticate
+            - reauthenticate_by_code
             - signup
             - verify_email
             - verify_phone
@@ -2370,6 +2464,12 @@ components:
           description: Matches `settings.MFA_SUPPORTED_TYPES`.
           items:
             $ref: "#/components/schemas/AuthenticatorType"
+        recipients:
+          type: array
+          description: |
+            Verified destinations that can receive a reauthentication code.
+          items:
+            $ref: "#/components/schemas/ReauthenticationCodeRecipient"
       required:
         - id
     Authenticated:
@@ -2442,7 +2542,7 @@ components:
             - method
         - type: object
           title: |
-            Authenticated by confirming a code sent by email.
+            (Re)authenticated by confirming a code sent by email.
           properties:
             method:
               type: string
@@ -2452,13 +2552,17 @@ components:
               $ref: "#/components/schemas/Timestamp"
             email:
               $ref: "#/components/schemas/Email"
+            reauthenticated:
+              type: boolean
+              enum:
+                - true
           required:
             - at
             - email
             - method
         - type: object
           title: |
-            Authenticated by confirming a code sent by phone.
+            (Re)authenticated by confirming a code sent by phone.
           properties:
             method:
               type: string
@@ -2468,6 +2572,10 @@ components:
               $ref: "#/components/schemas/Timestamp"
             phone:
               $ref: "#/components/schemas/Phone"
+            reauthenticated:
+              type: boolean
+              enum:
+                - true
           required:
             - at
             - method
@@ -2662,6 +2770,43 @@ components:
               $ref: "#/components/schemas/Email"
           required:
             - email
+    RequestReauthenticationCode:
+      type: object
+      oneOf:
+        - title: Request reauthentication code by phone
+          type: object
+          properties:
+            phone:
+              $ref: "#/components/schemas/Phone"
+          required:
+            - phone
+          additionalProperties: false
+        - title: Request reauthentication code by email
+          type: object
+          properties:
+            email:
+              $ref: "#/components/schemas/Email"
+          required:
+            - email
+          additionalProperties: false
+    ReauthenticationCodeRecipient:
+      oneOf:
+        - title: Email recipient
+          type: object
+          properties:
+            email:
+              $ref: "#/components/schemas/Email"
+          required:
+            - email
+          additionalProperties: false
+        - title: Phone recipient
+          type: object
+          properties:
+            phone:
+              $ref: "#/components/schemas/Phone"
+          required:
+            - phone
+          additionalProperties: false
     Reauthenticate:
       type: object
       properties:
@@ -3456,6 +3601,9 @@ components:
                       type: totp
                   flows:
                     - id: reauthenticate
+                    - id: reauthenticate_by_code
+                      recipients:
+                        - email: email@domain.org
                     - id: mfa_reauthenticate
                 meta:
                   is_authenticated: true

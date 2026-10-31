@@ -37,7 +37,14 @@ from allauth.account.views._password_reset import (
     password_reset_from_key_done,
 )
 from allauth.account.views._phone import ChangePhoneView, change_phone, verify_phone
-from allauth.account.views._reauthenticate import ReauthenticateView, reauthenticate
+from allauth.account.views._reauthenticate import (
+    ConfirmReauthenticationCodeView,
+    ReauthenticateView,
+    RequestReauthenticationCodeView,
+    confirm_reauthentication_code,
+    reauthenticate,
+    request_reauthentication_code,
+)
 from allauth.account.views._signup import (
     SignupByPasskeyView,
     SignupView,
@@ -54,6 +61,7 @@ __all__ = [
     "ConfirmEmailView",
     "ConfirmLoginCodeView",
     "ConfirmPasswordResetCodeView",
+    "ConfirmReauthenticationCodeView",
     "EmailVerificationSentView",
     "EmailView",
     "LoginView",
@@ -66,6 +74,7 @@ __all__ = [
     "PasswordSetView",
     "ReauthenticateView",
     "RequestLoginCodeView",
+    "RequestReauthenticationCodeView",
     "SignupByPasskeyView",
     "SignupView",
     "account_inactive",
@@ -74,6 +83,7 @@ __all__ = [
     "confirm_email",
     "confirm_login_code",
     "confirm_password_reset_code",
+    "confirm_reauthentication_code",
     "email",
     "email_verification_sent",
     "login",
@@ -86,6 +96,7 @@ __all__ = [
     "password_set",
     "reauthenticate",
     "request_login_code",
+    "request_reauthentication_code",
     "signup",
     "signup_by_passkey",
     "verify_phone",

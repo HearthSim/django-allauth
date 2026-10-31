@@ -76,6 +76,18 @@ class BaseAuthenticationResponse(APIResponse):
                 self._enrich_mfa_flow(stage, pending_flow)
             self._upsert_pending_flow(ret, pending_flow)
 
+        if user and user.is_authenticated and not allauth_settings.SOCIALACCOUNT_ONLY:
+            process = (
+                flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess.resume(
+                    request
+                )
+            )
+            if process:
+                self._upsert_pending_flow(
+                    ret,
+                    {"id": Flow.REAUTHENTICATE_BY_CODE, "is_pending": True},
+                )
+
         if (
             not allauth_settings.SOCIALACCOUNT_ONLY
             and account_settings.PASSWORD_RESET_BY_CODE_ENABLED

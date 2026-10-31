@@ -907,6 +907,13 @@ class DefaultAccountAdapter(BaseAdapter):
                 "url": reverse("account_reauthenticate"),
             }
             ret.append(entry)
+        if "reauthenticate_by_code" in flow_by_id:
+            entry = {
+                "id": "reauthenticate_by_code",
+                "description": _("Send me a sign-in code"),
+                "url": reverse("account_request_reauthentication_code"),
+            }
+            ret.append(entry)
         if "mfa_reauthenticate" in flow_by_id:
             types = flow_by_id["mfa_reauthenticate"]["types"]
             if "recovery_codes" in types or "totp" in types:

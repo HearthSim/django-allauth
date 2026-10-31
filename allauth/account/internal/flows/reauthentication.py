@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any
 
 from django.contrib.auth import REDIRECT_FIELD_NAME
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -11,10 +12,12 @@ from django.utils.http import urlencode
 from allauth import app_settings as allauth_settings
 from allauth.account import app_settings
 from allauth.account.adapter import get_adapter
+from allauth.account.internal import phonekit
 from allauth.account.internal.flows.login import (
     get_authentication_records,
     record_authentication,
 )
+from allauth.account.models import EmailAddress
 from allauth.core.exceptions import ReauthenticationRequired
 from allauth.core.internal.httpkit import (
     authenticated_user,
@@ -26,6 +29,21 @@ from allauth.utils import import_callable
 
 
 STATE_SESSION_KEY = "account_reauthentication_state"
+
+
+def get_reauthentication_code_recipients(
+    user: AbstractBaseUser,
+) -> list[dict[str, str]]:
+    recipients = [
+        {"email": email}
+        for email in EmailAddress.objects.filter(user_id=user.pk, verified=True)
+        .values_list("email", flat=True)
+        .order_by("email")
+    ]
+    phone = phonekit.get_verified_phone(user)
+    if phone is not None:
+        recipients.append({"phone": phone})
+    return recipients
 
 
 def reauthenticate_by_password(request: HttpRequest) -> None:
@@ -107,13 +125,22 @@ def did_recently_reauthenticate(request: HttpRequest) -> bool:
     return time.time() - authenticated_at < app_settings.REAUTHENTICATION_TIMEOUT
 
 
-def get_reauthentication_flows(user: AbstractBaseUser) -> list[dict]:
-    ret: list[dict] = []
+def get_reauthentication_flows(user: AbstractBaseUser) -> list[dict[str, Any]]:
+    ret: list[dict[str, Any]] = []
     if not user.is_authenticated:
         return ret
     if user.has_usable_password():
-        entry = {
+        entry: dict[str, Any] = {
             "id": "reauthenticate",
+        }
+        ret.append(entry)
+    recipients = []
+    if not allauth_settings.SOCIALACCOUNT_ONLY:
+        recipients = get_reauthentication_code_recipients(user)
+    if recipients:
+        entry = {
+            "id": "reauthenticate_by_code",
+            "recipients": recipients,
         }
         ret.append(entry)
     if allauth_settings.MFA_ENABLED:
@@ -127,3 +154,13 @@ def get_reauthentication_flows(user: AbstractBaseUser) -> list[dict]:
         if types:
             ret.append({"id": "mfa_reauthenticate", "types": types})
     return ret
+
+
+def is_reauthentication_method(request: HttpRequest, method: dict) -> bool:
+    """
+    Is this request on a path that is part of the reauthentication method?
+    """
+    urls = [method["url"]]
+    if method.get("id") == "reauthenticate_by_code":
+        urls.append(reverse("account_confirm_reauthentication_code"))
+    return any(url == request.path for url in urls)

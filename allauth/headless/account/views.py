@@ -43,12 +43,14 @@ from allauth.headless.account.inputs import (
     ChangePasswordInput,
     ChangePhoneInput,
     ConfirmLoginCodeInput,
+    ConfirmReauthenticationCodeInput,
     DeleteEmailInput,
     LoginInput,
     MarkAsPrimaryEmailInput,
     ReauthenticateInput,
     RequestLoginCodeInput,
     RequestPasswordResetInput,
+    RequestReauthenticationCodeInput,
     ResendEmailVerificationInput,
     ResetPasswordInput,
     ResetPasswordKeyInput,
@@ -584,3 +586,71 @@ class ReauthenticateView(AuthenticatedAPIView):
 
     def get_input_kwargs(self) -> dict:
         return {"user": self.request.user}
+
+
+@method_decorator(rate_limit(action="reauthenticate"), name="handle")
+class RequestReauthenticationCodeView(AuthenticatedAPIView):
+    input_class = RequestReauthenticationCodeInput
+    input: RequestReauthenticationCodeInput
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess.initiate(
+            request=self.request,
+            user=self.request.user,
+            email=self.input.cleaned_data.get("email"),
+            phone=self.input.cleaned_data.get("phone"),
+        )
+        return APIResponse(self.request)
+
+    def get_input_kwargs(self) -> dict:
+        return {"user": self.request.user}
+
+
+class ConfirmReauthenticationCodeView(AuthenticatedAPIView):
+    input_class = ConfirmReauthenticationCodeInput
+    input: ConfirmReauthenticationCodeInput
+    process: flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess
+
+    def handle(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        process = (
+            flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess.resume(
+                request
+            )
+        )
+        if not process:
+            return ConflictResponse(request)
+        self.process = process
+        return super().handle(request, *args, **kwargs)
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        self.process.finish()
+        return AuthenticationResponse(self.request)
+
+    def get_input_kwargs(self) -> dict:
+        return {"code": self.process.code}
+
+    def handle_invalid_input(
+        self, input: ConfirmReauthenticationCodeInput
+    ) -> ErrorResponse:
+        self.process.record_invalid_attempt()
+        return super().handle_invalid_input(input)
+
+
+class ResendReauthenticationCodeView(AuthenticatedAPIView):
+    handle_json_input = False
+
+    def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
+        process = (
+            flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess.resume(
+                request
+            )
+        )
+        if not process or not process.can_resend:
+            return ConflictResponse(request)
+        try:
+            process.resend()
+        except RateLimited:
+            return RateLimitResponse(request)
+        return APIResponse(request)
