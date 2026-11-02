@@ -19,7 +19,7 @@ from django.views.generic.edit import FormView
 from allauth.account import app_settings as account_settings
 from allauth.account.internal.decorators import login_stage_required
 from allauth.account.internal.templatekit import get_entrance_context_data
-from allauth.account.views import BaseReauthenticateView
+from allauth.account.views._reauthenticate import BaseReauthenticateView
 from allauth.core.internal.httpkit import authenticated_user
 from allauth.mfa import app_settings
 from allauth.mfa.base.forms import AuthenticateForm, ReauthenticateForm

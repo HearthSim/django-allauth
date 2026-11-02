@@ -9,7 +9,7 @@ from allauth.account.internal.stagekit import clear_login
 
 def logout(request: HttpRequest, *, show_message: bool = True) -> None:
     from allauth.account.adapter import get_adapter
-    from allauth.account.views import INTERNAL_RESET_SESSION_KEY
+    from allauth.account.views._password_reset import INTERNAL_RESET_SESSION_KEY
 
     if request.user.is_authenticated:
         adapter = get_adapter()

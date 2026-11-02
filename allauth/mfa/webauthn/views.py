@@ -17,7 +17,7 @@ from allauth.account.internal.decorators import login_stage_required
 from allauth.account.internal.templatekit import get_entrance_context_data
 from allauth.account.mixins import NextRedirectMixin, RedirectAuthenticatedUserMixin
 from allauth.account.models import Login
-from allauth.account.views import BaseReauthenticateView
+from allauth.account.views._reauthenticate import BaseReauthenticateView
 from allauth.core.internal import ratelimit
 from allauth.mfa import app_settings
 from allauth.mfa.internal.flows.add import redirect_if_add_not_allowed

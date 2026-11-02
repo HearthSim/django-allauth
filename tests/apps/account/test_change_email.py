@@ -394,7 +394,7 @@ def test_remove_email(
     ],
 )
 def test_dont_lookup_invalid_email(auth_client, email, did_look_up):
-    with patch("allauth.account.views.EmailAddress.objects.get_for_user") as gfu_mock:
+    with patch("allauth.account.models.EmailAddress.objects.get_for_user") as gfu_mock:
         gfu_mock.side_effect = EmailAddress.DoesNotExist
         auth_client.post(
             reverse("account_email"),

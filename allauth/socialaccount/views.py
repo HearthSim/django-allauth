@@ -23,7 +23,7 @@ from allauth.socialaccount.internal import flows
 from allauth.socialaccount.models import SocialAccount, SocialLogin
 
 from ..account import app_settings as account_settings
-from ..account.views import (
+from ..account.mixins import (
     AjaxCapableProcessFormViewMixin,
     CloseableSignupMixin,
     RedirectAuthenticatedUserMixin,
