@@ -14,6 +14,7 @@ from allauth.account.internal.flows.signup import send_unknown_account_mail
 class BaseConfirmAuthenticationCodeProcess(AbstractCodeVerificationProcess):
     request: HttpRequest
     stage: Any
+    reauthentication: bool = False
 
     def send(self, skip_enumeration_mails: bool = False) -> None:
         email = self.state.get("email")
@@ -45,7 +46,12 @@ class BaseConfirmAuthenticationCodeProcess(AbstractCodeVerificationProcess):
         adapter = get_adapter()
         if self.user:
             code = self.generate_code()
-            adapter.send_verification_code_sms(user=self.user, phone=phone, code=code)
+            adapter.send_verification_code_sms(
+                user=self.user,
+                phone=phone,
+                code=code,
+                reauthentication=self.reauthentication,
+            )
         elif not skip_enumeration_mails:
             if self.stage.login.signup:
                 adapter.send_account_already_exists_sms(phone)
@@ -60,6 +66,7 @@ class BaseConfirmAuthenticationCodeProcess(AbstractCodeVerificationProcess):
             context = {
                 "request": self.request,
                 "code": code,
+                "reauthentication": self.reauthentication,
             }
             adapter.send_mail("account/email/login_code", email, context)
         elif not skip_enumeration_mails:
@@ -67,9 +74,15 @@ class BaseConfirmAuthenticationCodeProcess(AbstractCodeVerificationProcess):
                 adapter.send_account_already_exists_mail(email)
             else:
                 send_unknown_account_mail(self.request, email)
-        self.add_sent_message({"email": email, "recipient": email})
+        self.add_sent_message(
+            {
+                "email": email,
+                "recipient": email,
+            }
+        )
 
     def add_sent_message(self, context) -> None:
+        context["reauthentication"] = self.reauthentication
         get_adapter().add_message(
             self.request,
             messages.SUCCESS,

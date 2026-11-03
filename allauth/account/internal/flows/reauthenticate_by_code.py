@@ -18,6 +18,8 @@ REAUTHENTICATION_CODE_SESSION_KEY = "account_email_reauthentication_code"
 
 
 class ConfirmReauthenticationCodeProcess(BaseConfirmAuthenticationCodeProcess):
+    reauthentication: bool = True
+
     def __init__(self, request: HttpRequest, state: dict, user) -> None:
         self.request = request
         super().__init__(
