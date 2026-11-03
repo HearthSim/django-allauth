@@ -31,6 +31,9 @@ Security notice
   password) now requires reauthentication when
   ``ACCOUNT_REAUTHENTICATION_REQUIRED`` is enabled.
 
+- MFA: Fixed a remaining passwordless WebAuthn login path that did not enforce
+  user verification.
+
 
 65.21.1 (2026-10-30)
 ********************

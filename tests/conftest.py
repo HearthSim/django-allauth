@@ -149,7 +149,7 @@ def reauthentication_bypass():
 @pytest.fixture
 def webauthn_authentication_bypass():
     @contextmanager
-    def f(authenticator):
+    def f(authenticator, user_verified=True):
         from fido2.utils import websafe_encode
 
         from allauth.mfa.adapter import get_adapter
@@ -185,7 +185,11 @@ def webauthn_authentication_bypass():
                             "credential_id"
                         )
                         ad_m.return_value = authenticator_data
-                        m.return_value = Mock()
+                        response = Mock()
+                        response.response.authenticator_data.is_user_verified.return_value = (
+                            user_verified
+                        )
+                        m.return_value = response
                         binding = Mock()
                         binding.credential_id = "credential_id"
                         ac_m.return_value = binding

@@ -85,7 +85,7 @@ class AuthenticateWebAuthnForm(forms.Form):
         # Explicitly parse JSON payload -- otherwise, authenticate_complete()
         # crashes with some random TypeError and we don't want to do
         # Pokemon-style exception handling.
-        auth.parse_authentication_response(credential)
+        response = auth.parse_authentication_response(credential)
         user = self.user
         if user is None:
             user = auth.extract_user_from_response(credential)
@@ -96,6 +96,11 @@ class AuthenticateWebAuthnForm(forms.Form):
         else:
             clear_rl = check_rate_limit(user)
         authenticator = auth.complete_authentication(user, credential)
+        if (
+            self.passwordless
+            and not response.response.authenticator_data.is_user_verified()
+        ):
+            raise get_adapter().validation_error("incorrect_code")
         if clear_rl:
             clear_rl()
         return authenticator

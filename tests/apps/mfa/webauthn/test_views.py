@@ -36,6 +36,22 @@ def test_passkey_login(client, passkey, webauthn_authentication_bypass):
     ]
 
 
+def test_passkey_login_requires_user_verification(
+    client, passkey, webauthn_authentication_bypass
+):
+    with webauthn_authentication_bypass(passkey, user_verified=False) as credential:
+        resp = client.get(
+            reverse("mfa_login_webauthn"), HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+        )
+        assert resp.status_code == HTTPStatus.OK
+        resp = client.post(
+            reverse("mfa_login_webauthn"), data={"credential": credential}
+        )
+
+    assert resp["location"] == reverse("account_login")
+    assert get_authentication_records(resp.wsgi_request, passkey.user) == []
+
+
 def test_inactive_passkey_login_does_not_bypass_mfa_for_next_user(
     client,
     user_with_passkey,
