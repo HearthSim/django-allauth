@@ -373,6 +373,8 @@ paths:
               examples:
                 invalid_email:
                   $ref: "#/components/examples/IncorrectPassword"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /_allauth/{client}/v1/auth/reauthenticate/code/request:
     post:
       tags:
@@ -397,6 +399,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           $ref: "#/components/responses/Authentication"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "429":
           $ref: "#/components/responses/TooManyRequests"
   /_allauth/{client}/v1/auth/reauthenticate/code/confirm:
@@ -423,6 +427,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
         "401":
           $ref: "#/components/responses/Authentication"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
           description: |
             Conflict. The reauthentication by code flow is not pending.
@@ -446,6 +452,8 @@ paths:
           $ref: "#/components/responses/StatusOK"
         "401":
           $ref: "#/components/responses/Authentication"
+        "403":
+          $ref: "#/components/responses/Forbidden"
         "409":
           description: |
             Conflict. The reauthentication by code flow is not pending or can
@@ -769,6 +777,8 @@ paths:
               examples:
                 invalid_code:
                   $ref: "#/components/examples/InvalidAuthenticatorCode"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /_allauth/browser/v1/auth/2fa/trust:
     post:
       tags:
@@ -847,6 +857,8 @@ paths:
       responses:
         "200":
           $ref: "#/components/responses/WebAuthnRequestOptionsResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
     post:
       tags:
         - "Authentication: WebAuthn: Login"
@@ -867,6 +879,8 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          $ref: "#/components/responses/Forbidden"
   /_allauth/{client}/v1/auth/webauthn/login:
     get:
       tags:

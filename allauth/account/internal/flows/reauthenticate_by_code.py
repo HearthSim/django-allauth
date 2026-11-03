@@ -8,6 +8,9 @@ from allauth.account.internal.flows._authenticate_by_code import (
 )
 from allauth.account.internal.flows.email_verification import verify_email_indirectly
 from allauth.account.internal.flows.login import record_authentication
+from allauth.account.internal.flows.reauthentication import (
+    raise_if_reauthentication_method_not_enabled,
+)
 from allauth.account.internal.flows.phone_verification import verify_phone_indirectly
 
 
@@ -25,6 +28,7 @@ class ConfirmReauthenticationCodeProcess(BaseConfirmAuthenticationCodeProcess):
         )
 
     def finish(self) -> None:
+        raise_if_reauthentication_method_not_enabled("code")
         email = self.state.get("email")
         phone = self.state.get("phone")
         user = self.user
@@ -69,6 +73,7 @@ class ConfirmReauthenticationCodeProcess(BaseConfirmAuthenticationCodeProcess):
         email: str | None = None,
         phone: str | None = None,
     ) -> ConfirmReauthenticationCodeProcess:
+        raise_if_reauthentication_method_not_enabled("code")
         state = cls.initial_state(user=user, email=email, phone=phone)
         process = ConfirmReauthenticationCodeProcess(
             request=request, user=user, state=state
@@ -79,6 +84,8 @@ class ConfirmReauthenticationCodeProcess(BaseConfirmAuthenticationCodeProcess):
 
     @classmethod
     def resume(cls, request: HttpRequest) -> ConfirmReauthenticationCodeProcess | None:
+        if "code" not in app_settings.REAUTHENTICATION_METHODS:
+            return None
         state = request.session.get(REAUTHENTICATION_CODE_SESSION_KEY)
         if not state or not request.user.is_authenticated:
             return None

@@ -129,6 +129,7 @@ authenticate = AuthenticateView.as_view()
 
 @method_decorator(login_required, name="dispatch")
 class ReauthenticateView(BaseReauthenticateView):
+    reauthentication_method = "mfa"
     form_class = ReauthenticateForm
     template_name = f"mfa/reauthenticate.{account_settings.TEMPLATE_EXTENSION}"
 

@@ -50,6 +50,19 @@ def test_connect_with_reauthentication(
     assert SocialAccount.objects.filter(user=user).exists()
 
 
+def test_connect_with_code_only_reauthentication(
+    auth_client, user, provider_callback_response, settings
+):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"code"}
+
+    resp = provider_callback_response(auth_client, process="connect")
+
+    assert not SocialAccount.objects.filter(user=user).exists()
+    assert resp.status_code == HTTPStatus.FOUND
+    assert resp["location"] == reverse("account_request_reauthentication_code")
+
+
 def test_connect(
     auth_client, user, provider_callback_response, settings, user_password, mailoutbox
 ):

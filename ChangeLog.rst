@@ -14,6 +14,17 @@ Note worthy changes
 - Reauthentication is now possible using a login code sent to a verified
   email address or phone number.
 
+- The available reauthentication methods can now be configured using
+  ``ACCOUNT_REAUTHENTICATION_METHODS``.
+
+
+Security notice
+---------------
+
+- Previously, reauthentication checks were skipped when no reauthentication
+  method was available, for example for social-only accounts without a
+  password. Access is now denied instead.
+
 
 65.21.1 (2026-10-30)
 ********************

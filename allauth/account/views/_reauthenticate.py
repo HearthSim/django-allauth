@@ -36,9 +36,14 @@ from allauth.utils import get_form_class
 
 
 class BaseReauthenticateView(NextRedirectMixin, FormView):
+    reauthentication_method: str
+
     def dispatch(
         self, request: HttpRequest, *args: Any, **kwargs: Any
     ) -> HttpResponseBase:
+        flows.reauthentication.raise_if_reauthentication_method_not_enabled(
+            self.reauthentication_method
+        )
         resp = self._check_reauthentication_method_available(request)
         if resp:
             return resp
@@ -104,6 +109,7 @@ class BaseReauthenticateView(NextRedirectMixin, FormView):
 
 @method_decorator(login_required, name="dispatch")
 class ReauthenticateView(BaseReauthenticateView):
+    reauthentication_method = "password"
     form_class = ReauthenticateForm
     template_name = f"account/reauthenticate.{app_settings.TEMPLATE_EXTENSION}"
 
@@ -125,6 +131,7 @@ reauthenticate = ReauthenticateView.as_view()
 
 @method_decorator(login_required, name="dispatch")
 class RequestReauthenticationCodeView(BaseReauthenticateView):
+    reauthentication_method = "code"
     template_name = (
         f"account/request_reauthentication_code.{app_settings.TEMPLATE_EXTENSION}"
     )
@@ -162,6 +169,7 @@ class ConfirmReauthenticationCodeView(BaseConfirmAuthenticationCodeView):
     def dispatch(
         self, request: HttpRequest, *args: Any, **kwargs: Any
     ) -> HttpResponseBase:
+        flows.reauthentication.raise_if_reauthentication_method_not_enabled("code")
         process = (
             flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess.resume(
                 request

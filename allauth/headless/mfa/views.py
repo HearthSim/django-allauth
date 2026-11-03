@@ -17,6 +17,7 @@ from allauth.headless.base.views import (
     APIView,
     AuthenticatedAPIView,
     AuthenticationStageAPIView,
+    ReauthenticationAPIView,
 )
 from allauth.headless.internal.restkit.response import ErrorResponse
 from allauth.headless.mfa import response
@@ -68,7 +69,8 @@ class AuthenticateView(AuthenticationStageAPIView):
         return {"user": self.stage.login.user}
 
 
-class ReauthenticateView(AuthenticatedAPIView):
+class ReauthenticateView(ReauthenticationAPIView):
+    reauthentication_method = "mfa"
     input_class = ReauthenticateInput
     input: ReauthenticateInput
 
@@ -196,7 +198,8 @@ class ManageWebAuthnView(AuthenticatedAPIView):
         return response.AuthenticatorsDeletedResponse(request)
 
 
-class ReauthenticateWebAuthnView(AuthenticatedAPIView):
+class ReauthenticateWebAuthnView(ReauthenticationAPIView):
+    reauthentication_method = "mfa"
     input_class = {
         "POST": ReauthenticateWebAuthnInput,
     }

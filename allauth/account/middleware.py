@@ -4,6 +4,7 @@ import posixpath
 from http import HTTPStatus
 from types import SimpleNamespace
 
+from django.core.exceptions import PermissionDenied
 from django.http import HttpRequest, HttpResponseRedirect
 from django.urls import NoReverseMatch, reverse
 from django.utils.decorators import sync_and_async_middleware
@@ -45,10 +46,13 @@ def AccountMiddleware(get_response):
         if isinstance(exception, ImmediateHttpResponse):
             return exception.response
         elif isinstance(exception, ReauthenticationRequired):
-            redirect_url = reverse("account_login")
-            methods = get_adapter().get_reauthentication_methods(request.user)
-            if methods:
+            if request.user.is_authenticated:
+                methods = get_adapter().get_reauthentication_methods(request.user)
+                if not methods:
+                    raise PermissionDenied
                 redirect_url = methods[0]["url"]
+            else:
+                redirect_url = reverse("account_login")
             return flows.reauthentication.suspend_request(request, redirect_url)
 
     middleware.process_exception = process_exception

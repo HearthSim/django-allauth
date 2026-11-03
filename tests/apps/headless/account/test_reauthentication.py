@@ -48,6 +48,53 @@ def test_reauthenticate(
     assert last_method["method"] == "password"
 
 
+@pytest.mark.parametrize(
+    ("method", "url_name"),
+    [
+        ("password", "headless:account:reauthenticate"),
+        ("code", "headless:account:request_reauthentication_code"),
+        ("code", "headless:account:confirm_reauthentication_code"),
+        ("code", "headless:account:resend_reauthentication_code"),
+    ],
+)
+def test_reauthentication_method_disabled(
+    settings, auth_client, headless_reverse, method, url_name
+):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"password", "code", "mfa"} - {method}
+    resp = auth_client.post(
+        headless_reverse(url_name),
+        data={},
+        content_type="application/json",
+    )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert resp["content-type"] == "application/json"
+    assert resp.json()["status"] == HTTPStatus.FORBIDDEN
+
+
+def test_disabled_reauthentication_code_not_advertised_as_pending(
+    settings, auth_client, user, headless_reverse, email_factory
+):
+    resp = auth_client.post(
+        headless_reverse("headless:account:request_reauthentication_code"),
+        data={"email": user.email},
+        content_type="application/json",
+    )
+    assert resp.status_code == HTTPStatus.OK
+    assert REAUTHENTICATION_CODE_SESSION_KEY in auth_client.headless_session()
+
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"password"}
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    resp = auth_client.post(
+        headless_reverse("headless:account:manage_email"),
+        data={"email": email_factory()},
+        content_type="application/json",
+    )
+
+    assert resp.status_code == HTTPStatus.UNAUTHORIZED
+    assert resp.json()["data"]["flows"] == [{"id": Flow.REAUTHENTICATE}]
+
+
 def test_reauthenticate_rate_limit(
     auth_client,
     user,

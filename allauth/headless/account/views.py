@@ -64,7 +64,11 @@ from allauth.headless.base.response import (
     ForbiddenResponse,
     RateLimitResponse,
 )
-from allauth.headless.base.views import APIView, AuthenticatedAPIView
+from allauth.headless.base.views import (
+    APIView,
+    AuthenticatedAPIView,
+    ReauthenticationAPIView,
+)
 from allauth.headless.internal import authkit
 from allauth.headless.internal.restkit.inputs import Input
 from allauth.headless.internal.restkit.response import APIResponse, ErrorResponse
@@ -577,7 +581,8 @@ class ManagePhoneView(APIView):
 
 
 @method_decorator(rate_limit(action="reauthenticate"), name="handle")
-class ReauthenticateView(AuthenticatedAPIView):
+class ReauthenticateView(ReauthenticationAPIView):
+    reauthentication_method = "password"
     input_class = ReauthenticateInput
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
@@ -589,7 +594,8 @@ class ReauthenticateView(AuthenticatedAPIView):
 
 
 @method_decorator(rate_limit(action="reauthenticate"), name="handle")
-class RequestReauthenticationCodeView(AuthenticatedAPIView):
+class RequestReauthenticationCodeView(ReauthenticationAPIView):
+    reauthentication_method = "code"
     input_class = RequestReauthenticationCodeInput
     input: RequestReauthenticationCodeInput
 
@@ -606,7 +612,8 @@ class RequestReauthenticationCodeView(AuthenticatedAPIView):
         return {"user": self.request.user}
 
 
-class ConfirmReauthenticationCodeView(AuthenticatedAPIView):
+class ConfirmReauthenticationCodeView(ReauthenticationAPIView):
+    reauthentication_method = "code"
     input_class = ConfirmReauthenticationCodeInput
     input: ConfirmReauthenticationCodeInput
     process: flows.reauthenticate_by_code.ConfirmReauthenticationCodeProcess
@@ -638,7 +645,8 @@ class ConfirmReauthenticationCodeView(AuthenticatedAPIView):
         return super().handle_invalid_input(input)
 
 
-class ResendReauthenticationCodeView(AuthenticatedAPIView):
+class ResendReauthenticationCodeView(ReauthenticationAPIView):
+    reauthentication_method = "code"
     handle_json_input = False
 
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:

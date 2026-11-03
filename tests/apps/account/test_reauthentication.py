@@ -109,6 +109,21 @@ def test_reauthentication(settings, auth_client, user, user_password):
     }
 
 
+@pytest.mark.parametrize(
+    ("method", "url_name"),
+    [
+        ("password", "account_reauthenticate"),
+        ("code", "account_request_reauthentication_code"),
+        ("code", "account_confirm_reauthentication_code"),
+    ],
+)
+def test_reauthentication_method_disabled(settings, auth_client, method, url_name):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"password", "code", "mfa"} - {method}
+    resp = auth_client.get(reverse(url_name))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.parametrize("recipient_type", ["email", "phone"])
 def test_reauthentication_by_code(
     recipient_type,
@@ -288,3 +303,16 @@ def test_adapter_can_require_reauthentication(settings, auth_client):
 
     assert not EmailAddress.objects.filter(email="reauthenticate@example.org").exists()
     assert resp["location"].startswith(reverse("account_reauthenticate"))
+
+
+def test_reauthentication_required_without_available_method(settings, auth_client):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = set()
+
+    resp = auth_client.post(
+        reverse("account_email"),
+        {"action_add": "", "email": "reauthenticate@example.org"},
+    )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert not EmailAddress.objects.filter(email="reauthenticate@example.org").exists()

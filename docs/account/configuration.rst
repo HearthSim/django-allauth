@@ -267,6 +267,12 @@ Email Verification
 Reauthentication
 ****************
 
+``ACCOUNT_REAUTHENTICATION_METHODS`` (default: ``{"password", "code", "mfa"}``)
+  Controls which methods can be used to reauthenticate. Supported values are
+  ``"password"`` for password reauthentication, ``"code"`` for a login code
+  sent to a verified email address or phone number, and ``"mfa"`` for TOTP,
+  recovery code, and WebAuthn reauthentication.
+
 ``ACCOUNT_REAUTHENTICATION_TIMEOUT`` (default: ``300``)
   Before asking the user to reauthenticate, we check if a successful
   (re)authentication happened within the amount of seconds specified here, and

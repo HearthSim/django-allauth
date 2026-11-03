@@ -160,6 +160,7 @@ login_webauthn = LoginWebAuthnView.as_view()
 
 @method_decorator(login_required, name="dispatch")
 class ReauthenticateWebAuthnView(BaseReauthenticateView):
+    reauthentication_method = "mfa"
     form_class = ReauthenticateWebAuthnForm
     template_name = f"mfa/webauthn/reauthenticate.{account_settings.TEMPLATE_EXTENSION}"
 

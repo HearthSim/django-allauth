@@ -231,11 +231,13 @@ class AuthorizationView(FormView):
             next_url = del_query_params(next_url, "prompt")
         params = {}
         params[REDIRECT_FIELD_NAME] = next_url
-        path = reverse(
-            "account_reauthenticate"
-            if request.user.is_authenticated
-            else "account_login"
-        )
+        if request.user.is_authenticated:
+            methods = get_account_adapter().get_reauthentication_methods(request.user)
+            if not methods:
+                raise PermissionDenied("Reauthentication not available")
+            path = methods[0]["url"]
+        else:
+            path = reverse("account_login")
         return HttpResponseRedirect(add_query_params(path, params))
 
     def _skip_consent(self) -> HttpResponse:

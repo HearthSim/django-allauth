@@ -167,6 +167,23 @@ def test_reauthenticate(
     assert resp.status_code == HTTPStatus.OK
 
 
+@pytest.mark.parametrize("http_method", ["get", "post"])
+def test_reauthentication_method_disabled(
+    auth_client, headless_reverse, settings, http_method
+):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"password", "code"}
+    request = getattr(auth_client, http_method)
+    resp = request(
+        headless_reverse("headless:mfa:reauthenticate_webauthn"),
+        data={} if http_method == "post" else None,
+        content_type="application/json",
+    )
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+    assert resp["content-type"] == "application/json"
+    assert resp.json()["status"] == HTTPStatus.FORBIDDEN
+
+
 def test_update_authenticator(
     auth_client, headless_reverse, passkey, reauthentication_bypass
 ):

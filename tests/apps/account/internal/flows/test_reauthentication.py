@@ -33,3 +33,19 @@ def test_reauthentication_record_is_bound_to_user(user, user_factory, request_fa
     )
 
     assert not did_recently_reauthenticate(request)
+
+
+def test_disabled_reauthentication_method_is_not_recent(
+    user, request_factory, settings
+):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"code"}
+    request = request_factory.get("/")
+    request.user = user
+    record_authentication(
+        request,
+        user,
+        method="password",
+        reauthenticated=True,
+    )
+
+    assert not did_recently_reauthenticate(request)

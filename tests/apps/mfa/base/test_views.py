@@ -35,6 +35,15 @@ def test_reauthentication(auth_client, user_with_recovery_codes):
     }
 
 
+def test_reauthentication_method_disabled(
+    auth_client, user_with_recovery_codes, settings
+):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"password", "code"}
+    resp = auth_client.get(reverse("mfa_reauthenticate"))
+
+    assert resp.status_code == HTTPStatus.FORBIDDEN
+
+
 @pytest.mark.parametrize(
     "url_name",
     (

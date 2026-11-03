@@ -177,6 +177,17 @@ class AppSettings:
         return frozenset([self.LoginMethod(m) for m in methods])
 
     @property
+    def REAUTHENTICATION_METHODS(self) -> frozenset[str]:
+        methods = self._setting("REAUTHENTICATION_METHODS", None)
+        if methods is None:
+            methods = (
+                "password",
+                "code",
+                "mfa",
+            )
+        return frozenset(methods)
+
+    @property
     def EMAIL_MAX_LENGTH(self) -> int:
         """
         Adjust max_length of email addresses

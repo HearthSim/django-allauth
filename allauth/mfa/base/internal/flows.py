@@ -7,6 +7,9 @@ from django.http import HttpRequest
 
 from allauth.account.adapter import get_adapter as get_account_adapter
 from allauth.account.internal.flows.login import record_authentication
+from allauth.account.internal.flows.reauthentication import (
+    raise_if_reauthentication_method_not_enabled,
+)
 from allauth.core import context, ratelimit
 from allauth.mfa import signals
 from allauth.mfa.models import Authenticator
@@ -40,6 +43,8 @@ def post_authentication(
     reauthenticated: bool = False,
     passwordless: bool = False,
 ) -> None:
+    if reauthenticated:
+        raise_if_reauthentication_method_not_enabled("mfa")
     authenticator.record_usage()
     extra_data = {
         "id": authenticator.pk,

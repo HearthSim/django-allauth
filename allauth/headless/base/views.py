@@ -6,6 +6,7 @@ from typing import Any
 from django.http import HttpRequest, HttpResponse, HttpResponseBase
 from django.utils.decorators import classonlymethod
 
+from allauth.account import app_settings as account_settings
 from allauth.account.stages import LoginStage, LoginStageController
 from allauth.core.exceptions import ReauthenticationRequired
 from allauth.headless.base import response
@@ -60,6 +61,21 @@ class AuthenticatedAPIView(APIView):
     ) -> HttpResponseBase:
         if not request.user.is_authenticated:
             return response.AuthenticationResponse(request)
+        return super().dispatch(request, *args, **kwargs)
+
+
+class ReauthenticationAPIView(AuthenticatedAPIView):
+    reauthentication_method: str
+
+    def dispatch(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        if (
+            request.user.is_authenticated
+            and self.reauthentication_method
+            not in account_settings.REAUTHENTICATION_METHODS
+        ):
+            return response.ForbiddenResponse(request)
         return super().dispatch(request, *args, **kwargs)
 
 

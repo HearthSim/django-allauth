@@ -529,6 +529,31 @@ def test_redirect_to_login_with_prompt_login(
         assert "prompt" not in params
 
 
+def test_prompt_login_with_code_only_reauthentication(
+    auth_client, oidc_client, settings
+):
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"code"}
+    redirect_uri = oidc_client.get_redirect_uris()[0]
+
+    resp = auth_client.get(
+        reverse("idp:oidc:authorization")
+        + "?"
+        + urlencode(
+            {
+                "client_id": oidc_client.id,
+                "response_type": "code",
+                "redirect_uri": redirect_uri,
+                "prompt": "login",
+            }
+        )
+    )
+
+    assert resp.status_code == HTTPStatus.FOUND
+    assert urlparse(resp["location"]).path == reverse(
+        "account_request_reauthentication_code"
+    )
+
+
 @pytest.mark.parametrize(
     "client_fixture,scope,error",
     [
