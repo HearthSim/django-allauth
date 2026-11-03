@@ -103,6 +103,7 @@ def test_device_flow(
         "user_code": ANY,
         "device_code": ANY,
         "interval": 5,
+        "scope": "openid email" if with_scope else "profile",
     }
     assert (
         data["verification_uri_complete"]

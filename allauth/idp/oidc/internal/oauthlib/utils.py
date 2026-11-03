@@ -107,6 +107,7 @@ class ValidatorContext:
     codes: dict[tuple[str, str], dict[str, Any] | None] = field(default_factory=dict)
     requested_resources: list[str] | None = None
     granted_resources: list[str] | None = None
+    authorized_device_code: tuple[str, str] | None = None
 
 
 def get_validator_context() -> ValidatorContext:

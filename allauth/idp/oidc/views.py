@@ -30,7 +30,7 @@ from django.views.generic.edit import FormView
 
 from oauthlib.common import Request
 from oauthlib.oauth2.rfc6749 import errors
-from oauthlib.oauth2.rfc6749.errors import InvalidScopeError, OAuth2Error
+from oauthlib.oauth2.rfc6749.errors import OAuth2Error
 
 from allauth.account import app_settings as account_settings
 from allauth.account.adapter import get_adapter as get_account_adapter
@@ -326,12 +326,7 @@ class DeviceCodeView(View):
             )
             if status == HTTPStatus.OK:
                 client_id = request.POST["client_id"]
-                scope: list[str] | None = None
-                if "scope" in request.POST:
-                    scope = request.POST["scope"].split()
-                    client = Client.objects.get(id=client_id)
-                    if not set(scope).issubset(set(client.get_scopes())):
-                        raise InvalidScopeError()
+                scope = data.get("scope", "").split()
                 device_codes.create(client_id, scope, data)
         except OAuth2Error as e:
             return HttpResponse(
@@ -439,8 +434,7 @@ class TokenView(View):
         if orequest.grant_type == Client.GrantType.DEVICE_CODE:
             assert user is not None  # nosec
             assert data is not None  # nosec
-            if scope := data.get("scope"):
-                orequest.scope = scope
+            orequest.scopes = data.get("scope") or []
             orequest.user = user
 
     def _post_device_token(self, request: HttpRequest) -> HttpResponse:

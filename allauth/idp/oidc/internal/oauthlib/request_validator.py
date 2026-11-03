@@ -7,6 +7,7 @@ from typing import Any
 from django.utils import timezone
 
 from oauthlib.common import Request
+from oauthlib.oauth2.rfc8628.grant_types import DeviceCodeGrant
 from oauthlib.openid import RequestValidator
 
 from allauth.core import context
@@ -30,6 +31,14 @@ from allauth.idp.oidc.models import Client, Token
 
 
 class OAuthLibRequestValidator(RequestValidator):
+    def validate_device_code(
+        self, client_id: str, code: str, request: Request, *args, **kwargs
+    ) -> str | None:
+        authorized_device_code = get_validator_context().authorized_device_code
+        if authorized_device_code != (client_id, code):
+            return None
+        return DeviceCodeGrant.DEVICE_CODE_AUTHORIZED
+
     def validate_client_id(self, client_id: Any, request: Request) -> bool:
         if not isinstance(client_id, str):
             return False

@@ -127,5 +127,6 @@ def poll_device_code(
     if user is None or not user.is_active:
         raise AccessDenied
     ctx = get_validator_context()
+    ctx.authorized_device_code = (client_id, device_code)
     ctx.granted_resources = data["resources"]
     return user, data
