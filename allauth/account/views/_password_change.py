@@ -80,6 +80,9 @@ class PasswordSetView(AjaxCapableProcessFormViewMixin, NextRedirectMixin, FormVi
         assert user.is_authenticated  # nosec
         if user.has_usable_password():
             return HttpResponseRedirect(reverse("account_change_password"))
+        flows.reauthentication.raise_if_reauthentication_required(
+            request, app="allauth.account"
+        )
         return super().dispatch(request, *args, **kwargs)
 
     def get_form_kwargs(self) -> dict:

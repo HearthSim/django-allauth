@@ -8,10 +8,10 @@ from allauth.account.internal.flows._authenticate_by_code import (
 )
 from allauth.account.internal.flows.email_verification import verify_email_indirectly
 from allauth.account.internal.flows.login import record_authentication
+from allauth.account.internal.flows.phone_verification import verify_phone_indirectly
 from allauth.account.internal.flows.reauthentication import (
     raise_if_reauthentication_method_not_enabled,
 )
-from allauth.account.internal.flows.phone_verification import verify_phone_indirectly
 
 
 REAUTHENTICATION_CODE_SESSION_KEY = "account_email_reauthentication_code"

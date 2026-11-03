@@ -407,6 +407,16 @@ class ResetPasswordView(APIView):
 class ChangePasswordView(AuthenticatedAPIView):
     input_class = ChangePasswordInput
 
+    def handle(
+        self, request: HttpRequest, *args: Any, **kwargs: Any
+    ) -> HttpResponseBase:
+        assert request.user.is_authenticated  # nosec
+        if not request.user.has_usable_password():
+            flows.reauthentication.raise_if_reauthentication_required(
+                request, app="allauth.account"
+            )
+        return super().handle(request, *args, **kwargs)
+
     def post(self, request: HttpRequest, *args: Any, **kwargs: Any) -> HttpResponse:
         assert request.user.is_authenticated  # nosec
         password_change.change_password(

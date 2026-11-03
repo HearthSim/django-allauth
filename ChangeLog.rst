@@ -25,6 +25,10 @@ Security notice
   method was available, for example for social-only accounts without a
   password. Access is now denied instead.
 
+- Setting a password (e.g. using a social-only account that has no usable
+  password) now requires reauthentication when
+  ``ACCOUNT_REAUTHENTICATION_REQUIRED`` is enabled.
+
 
 65.21.1 (2026-10-30)
 ********************

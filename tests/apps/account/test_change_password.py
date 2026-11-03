@@ -6,6 +6,9 @@ from django.urls import NoReverseMatch, reverse, reverse_lazy
 import pytest
 
 from allauth.account.forms import ChangePasswordForm
+from allauth.account.internal.flows.reauthenticate_by_code import (
+    REAUTHENTICATION_CODE_SESSION_KEY,
+)
 
 
 def test_change_unusable_password_redirects_to_set(client, user, user_password):
@@ -17,10 +20,44 @@ def test_change_unusable_password_redirects_to_set(client, user, user_password):
     assert resp["location"] == reverse("account_set_password")
 
 
-def test_set_usable_password_redirects_to_change(auth_client, user):
+def test_set_usable_password_redirects_to_change(auth_client, user, settings):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
     resp = auth_client.get(reverse("account_set_password"))
     assert resp.status_code == HTTPStatus.FOUND
     assert resp["location"] == reverse("account_change_password")
+
+
+def test_set_password_requires_reauthentication(
+    client, user, password_factory, settings
+):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"code"}
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
+    client.force_login(user)
+    password = password_factory()
+
+    resp = client.post(
+        reverse("account_set_password"),
+        {"password1": password, "password2": password},
+    )
+
+    assert resp.status_code == HTTPStatus.FOUND
+    assert (
+        resp["location"] == f"{reverse('account_request_reauthentication_code')}"
+        "?next=%2Faccounts%2Fpassword%2Fset%2F"
+    )
+    user.refresh_from_db()
+    assert not user.has_usable_password()
+
+    resp = client.post(resp["location"], {"recipient": user.email})
+    code = client.session[REAUTHENTICATION_CODE_SESSION_KEY]["code"]
+    resp = client.post(resp["location"], {"code": code})
+
+    assert resp.status_code == HTTPStatus.FOUND
+    assert resp["location"] == reverse("account_change_password")
+    user.refresh_from_db()
+    assert user.check_password(password)
 
 
 @pytest.mark.parametrize(

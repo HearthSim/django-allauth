@@ -4,6 +4,8 @@ from unittest.mock import ANY
 
 import pytest
 
+from allauth.headless.constants import Flow
+
 
 @pytest.mark.parametrize(
     "has_password,request_data,response_data,status_code",
@@ -193,6 +195,54 @@ def test_change_password(
     else:
         assert user.check_password(user_password)
         assert len(mailoutbox) == 0
+
+
+def test_set_password_requires_reauthentication(
+    auth_client, user, password_factory, settings, headless_reverse
+):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    settings.ACCOUNT_REAUTHENTICATION_METHODS = {"code"}
+    user.set_unusable_password()
+    user.save(update_fields=["password"])
+    auth_client.force_login(user)
+
+    resp = auth_client.post(
+        headless_reverse("headless:account:change_password"),
+        data={"new_password": password_factory()},
+        content_type="application/json",
+    )
+
+    assert resp.status_code == HTTPStatus.UNAUTHORIZED
+    assert resp.json()["data"]["flows"] == [
+        {
+            "id": Flow.REAUTHENTICATE_BY_CODE,
+            "recipients": [{"email": user.email}],
+        }
+    ]
+    user.refresh_from_db()
+    assert not user.has_usable_password()
+
+
+def test_change_password_does_not_require_additional_reauthentication(
+    auth_client,
+    user,
+    user_password,
+    password_factory,
+    settings,
+    headless_reverse,
+):
+    settings.ACCOUNT_REAUTHENTICATION_REQUIRED = True
+    password = password_factory()
+
+    resp = auth_client.post(
+        headless_reverse("headless:account:change_password"),
+        data={"current_password": user_password, "new_password": password},
+        content_type="application/json",
+    )
+
+    assert resp.status_code == HTTPStatus.OK
+    user.refresh_from_db()
+    assert user.check_password(password)
 
 
 def test_change_password_rate_limit(
