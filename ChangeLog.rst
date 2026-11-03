@@ -34,6 +34,9 @@ Security notice
 - MFA: Fixed a remaining passwordless WebAuthn login path that did not enforce
   user verification.
 
+- MFA: With a nonzero ``MFA_TOTP_TOLERANCE``, a used TOTP code could briefly be
+  reused within its tolerance window. Thanks to Zachary Satterly for reporting.
+
 
 65.21.1 (2026-10-30)
 ********************

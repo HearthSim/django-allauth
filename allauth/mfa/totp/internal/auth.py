@@ -112,6 +112,7 @@ class TOTP:
         return f"allauth.mfa.totp.used?user={self.instance.user_id}&code={normalize_user_code(code)}"
 
     def _mark_code_used(self, code: str) -> bool:
-        return cache.add(
-            self._get_used_cache_key(code), "y", timeout=app_settings.TOTP_PERIOD
-        )
+        # A code remains valid for every counter in the tolerance window, so
+        # the used-code marker must cover the entire window.
+        timeout = app_settings.TOTP_PERIOD * (2 * app_settings.TOTP_TOLERANCE + 1)
+        return cache.add(self._get_used_cache_key(code), "y", timeout=timeout)
