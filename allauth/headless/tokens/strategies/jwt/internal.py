@@ -8,7 +8,7 @@ import time
 import uuid
 from dataclasses import dataclass
 from functools import cache
-from typing import Any
+from typing import Any, cast
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
@@ -32,7 +32,14 @@ class JWTConfig:
     jwk_dict: dict[str, Any] | None = None
 
 
-def validate_access_token(token: str) -> tuple[Any, dict[str, Any]] | None:
+@dataclass
+class AccessTokenValidationResult:
+    user: AbstractBaseUser
+    payload: dict[str, Any]
+    session: SessionBase | None
+
+
+def validate_access_token(token: str) -> AccessTokenValidationResult | None:
     payload = decode_token(token, "access")
     if payload is None:
         return None
@@ -43,11 +50,14 @@ def validate_access_token(token: str) -> tuple[Any, dict[str, Any]] | None:
         user = validate_token_user(payload, session)
         if user is None:
             return None
-        return user, payload
+        return AccessTokenValidationResult(user=user, payload=payload, session=session)
     sub = payload["sub"]
     pk = str_to_user_id(sub)
-    lazy_user = SimpleLazyObject(lambda: get_user_model().objects.get(pk=pk))
-    return lazy_user, payload
+    lazy_user = cast(
+        AbstractBaseUser,
+        SimpleLazyObject(lambda: get_user_model().objects.get(pk=pk)),
+    )
+    return AccessTokenValidationResult(user=lazy_user, payload=payload, session=None)
 
 
 def get_session_key_cipher(

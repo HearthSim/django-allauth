@@ -4,9 +4,18 @@ from django.http import HttpRequest
 
 from rest_framework import authentication
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework.request import Request
 
+from allauth.core import context
 from allauth.headless import app_settings
 from allauth.headless.internal.sessionkit import authenticate_by_x_session_token
+from allauth.usersessions.internal import usersessionkit
+
+
+def _get_http_request(request: HttpRequest | Request) -> HttpRequest:
+    if isinstance(request, Request):
+        return request._request
+    return request
 
 
 class XSessionTokenAuthentication(authentication.BaseAuthentication):
@@ -18,7 +27,13 @@ class XSessionTokenAuthentication(authentication.BaseAuthentication):
     def authenticate(self, request: HttpRequest):
         token = self.get_session_token(request)
         if token:
-            return authenticate_by_x_session_token(token)
+            user_session = authenticate_by_x_session_token(token)
+            if user_session:
+                user, session = user_session
+                usersessionkit.track_activity(
+                    _get_http_request(request), user=user, session=session
+                )
+                return user_session
         return None
 
     def get_session_token(self, request: HttpRequest) -> str | None:
@@ -42,11 +57,12 @@ class JWTTokenAuthentication(authentication.TokenAuthentication):
         """
         Validates the given access token.
         """
-        from allauth.headless.tokens.strategies.jwt.internal import (
-            validate_access_token,
-        )
+        from allauth.headless.tokens.strategies.jwt import internal
 
-        user_payload = validate_access_token(key)
-        if user_payload is None:
+        result = internal.validate_access_token(key)
+        if result is None:
             raise AuthenticationFailed("Invalid token.")
-        return user_payload
+        usersessionkit.track_activity(
+            context.request, user=result.user, session=result.session
+        )
+        return result.user, result.payload

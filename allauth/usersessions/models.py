@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from importlib import import_module
+from typing import TYPE_CHECKING
 
 from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser
@@ -15,6 +16,10 @@ from allauth.account.adapter import get_adapter
 from allauth.core import context
 from allauth.core.internal.httpkit import HTTP_USER_AGENT_MAX_LENGTH
 from allauth.core.internal.sessionkit import get_session_user
+
+
+if TYPE_CHECKING:
+    from django.contrib.sessions.backends.base import SessionBase
 
 
 if not allauth_settings.USERSESSIONS_ENABLED:
@@ -32,17 +37,25 @@ class UserSessionManager(models.Manager):
                 ret.append(session)
         return ret
 
-    def create_from_request(self, request: HttpRequest) -> None:
-        if not request.user.is_authenticated:
+    def create_from_request(
+        self,
+        request: HttpRequest,
+        *,
+        user: AbstractBaseUser | None = None,
+        session: SessionBase | None = None,
+    ) -> None:
+        resolved_user = user if user is not None else request.user
+        resolved_session = session if session is not None else request.session
+        if not resolved_user.is_authenticated:
             raise ValueError()
-        if not request.session.session_key:
-            request.session.save()
+        if not resolved_session.session_key:
+            resolved_session.save()
         ua = request.META.get("HTTP_USER_AGENT", "")[
             0 : UserSession._meta.get_field("user_agent").max_length
         ]
 
         defaults = dict(
-            user=request.user,
+            user=resolved_user,
             ip=get_adapter().get_client_ip(request),
             user_agent=ua,
         )
@@ -51,37 +64,37 @@ class UserSessionManager(models.Manager):
         with transaction.atomic():
             from allauth.usersessions.signals import session_client_changed
 
-            session, created = UserSession.objects.get_or_create(
-                session_key=request.session.session_key, defaults=defaults
+            user_session, created = UserSession.objects.get_or_create(
+                session_key=resolved_session.session_key, defaults=defaults
             )
 
             if not created:
                 from_session = UserSession(
-                    session_key=session.session_key,
-                    user=session.user,
-                    ip=session.ip,
-                    user_agent=session.user_agent,
-                    data=session.data,
-                    created_at=session.created_at,
-                    last_seen_at=session.last_seen_at,
+                    session_key=user_session.session_key,
+                    user=user_session.user,
+                    ip=user_session.ip,
+                    user_agent=user_session.user_agent,
+                    data=user_session.data,
+                    created_at=user_session.created_at,
+                    last_seen_at=user_session.last_seen_at,
                 )
                 # Update session
-                session.user = defaults["user"]
-                session.ip = defaults["ip"]
-                session.user_agent = defaults["user_agent"]
-                session.last_seen_at = timezone.now()
+                user_session.user = defaults["user"]
+                user_session.ip = defaults["ip"]
+                user_session.user_agent = defaults["user_agent"]
+                user_session.last_seen_at = timezone.now()
 
-                session.save()
+                user_session.save()
 
         if from_session and (
-            from_session.ip != session.ip
-            or from_session.user_agent != session.user_agent
+            from_session.ip != user_session.ip
+            or from_session.user_agent != user_session.user_agent
         ):
             session_client_changed.send(
                 sender=UserSession,
                 request=request,
                 from_session=from_session,
-                to_session=session,
+                to_session=user_session,
             )
 
 

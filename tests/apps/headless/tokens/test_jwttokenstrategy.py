@@ -84,8 +84,8 @@ def enable_jwt(settings):
 
 def _assert_bearer_resource(access_token, status_code):
     for url in (
-        reverse("headless_rest_framework_resource"),
-        "/headless/ninja/resource",
+        reverse("headless_rest_framework_jwt_resource"),
+        reverse("headless_ninja:jwt_resource"),
     ):
         resp = Client(HTTP_AUTHORIZATION=f"Bearer {access_token}").get(url)
         assert resp.status_code == status_code
@@ -182,8 +182,8 @@ def test_flow(
 
     # Also check validity with DRF & Ninja endpoints
     for url in [
-        reverse("headless_rest_framework_resource"),
-        "/headless/ninja/resource",
+        reverse("headless_rest_framework_jwt_resource"),
+        reverse("headless_ninja:jwt_resource"),
     ]:
         resp = Client(HTTP_AUTHORIZATION=f"Bearer {access_token}").get(
             f"{url}?userinfo"
@@ -208,8 +208,8 @@ def test_flow(
 
     # Also check validity with DRF & Ninja endpoints
     for url in [
-        reverse("headless_rest_framework_resource"),
-        "/headless/ninja/resource",
+        reverse("headless_rest_framework_jwt_resource"),
+        reverse("headless_ninja:jwt_resource"),
     ]:
         resp = Client(HTTP_AUTHORIZATION=f"Bearer {access_token}").get(
             f"{url}?userinfo"
@@ -238,8 +238,8 @@ def test_flow(
 
     # Also check validity with DRF & Ninja endpoints
     for url in [
-        reverse("headless_rest_framework_resource"),
-        "/headless/ninja/resource",
+        reverse("headless_rest_framework_jwt_resource"),
+        reverse("headless_ninja:jwt_resource"),
     ]:
         resp = Client(HTTP_AUTHORIZATION=f"Bearer {access_token}").get(url)
         assert resp.status_code == (
@@ -247,12 +247,14 @@ def test_flow(
         )
 
 
-@pytest.mark.parametrize("stateful,query_count", [(False, 0), (True, 2)])
 @pytest.mark.parametrize(
-    "url",
+    "url,stateful,query_count",
     [
-        reverse_lazy("headless_rest_framework_resource"),
-        "/headless/ninja/resource",
+        # NOTE: 1 because of permission_classes which fetches user.
+        (reverse_lazy("headless_rest_framework_jwt_resource"), False, 1),
+        (reverse_lazy("headless_rest_framework_jwt_resource"), True, 2),
+        (reverse_lazy("headless_ninja:jwt_resource"), False, 0),
+        (reverse_lazy("headless_ninja:jwt_resource"), True, 2),
     ],
 )
 def test_access_token_query_counts(

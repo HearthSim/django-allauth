@@ -19,6 +19,10 @@ Note worthy changes
 
 - New provider: Recharge.
 
+- Headless: Honor ``USERSESSIONS_TRACK_ACTIVITY`` for authenticated app requests,
+  the Django REST framework and Django Ninja integrations, and JWT refreshes.
+  Stateless JWT access token validation continues to skip activity tracking.
+
 
 Security notice
 ---------------

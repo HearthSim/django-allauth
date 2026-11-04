@@ -7,7 +7,8 @@ from ninja.security.base import AuthBase
 from allauth.core.internal.httpkit import get_authorization_credential
 from allauth.headless import app_settings
 from allauth.headless.internal.sessionkit import authenticate_by_x_session_token
-from allauth.headless.tokens.strategies.jwt.internal import validate_access_token
+from allauth.headless.tokens.strategies.jwt import internal
+from allauth.usersessions.internal import usersessionkit
 
 
 class XSessionTokenAuth(AuthBase):
@@ -23,7 +24,9 @@ class XSessionTokenAuth(AuthBase):
         if token:
             user_session = authenticate_by_x_session_token(token)
             if user_session:
-                return user_session[0]
+                user, session = user_session
+                usersessionkit.track_activity(request, user=user, session=session)
+                return user
         return None
 
     def get_session_token(self, request: HttpRequest) -> str | None:
@@ -47,12 +50,12 @@ class JWTTokenAuth(AuthBase):
         )
         if token is None:
             return None
-        user_payload = validate_access_token(token)
-        if user_payload is None:
+        result = internal.validate_access_token(token)
+        if result is None:
             return None
-        user, payload = user_payload
-        request.user = user
-        return payload
+        usersessionkit.track_activity(request, user=result.user, session=result.session)
+        request.user = result.user  # type: ignore[assignment]
+        return result.payload
 
 
 jwt_token_auth = JWTTokenAuth()

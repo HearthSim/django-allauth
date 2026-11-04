@@ -13,6 +13,7 @@ from allauth.core.exceptions import ImmediateHttpResponse
 from allauth.headless import app_settings
 from allauth.headless.constants import Client
 from allauth.headless.internal import sessionkit
+from allauth.usersessions.internal import usersessionkit
 
 
 if TYPE_CHECKING:
@@ -70,6 +71,12 @@ def authentication_context(request: HttpRequest):
         request.allauth.headless._pre_user = request.user  # type: ignore[attr-defined]
         # request.user is lazy -- force evaluation
         request.allauth.headless._pre_user.pk  # type: ignore[attr-defined]
+        if session_token:
+            usersessionkit.track_activity(
+                request,
+                user=request.user,
+                session=request.session,
+            )
         yield
     finally:
         if request.session.modified and not request.session.is_empty():

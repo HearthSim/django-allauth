@@ -6,6 +6,7 @@ from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.sessions.backends.base import SessionBase
 from django.http import HttpRequest
 
+from allauth.core import context
 from allauth.core.internal.httpkit import (
     authenticated_user,
     get_authorization_credential,
@@ -14,6 +15,7 @@ from allauth.headless import app_settings
 from allauth.headless.internal import sessionkit
 from allauth.headless.tokens.strategies.base import AbstractTokenStrategy
 from allauth.headless.tokens.strategies.jwt import internal
+from allauth.usersessions.internal import usersessionkit
 
 
 class JWTTokenStrategy(AbstractTokenStrategy):
@@ -32,10 +34,10 @@ class JWTTokenStrategy(AbstractTokenStrategy):
         )
         if access_token is None:
             return None
-        user_payload = internal.validate_access_token(access_token)
-        if user_payload is None:
+        result = internal.validate_access_token(access_token)
+        if result is None:
             return None
-        return user_payload[1]
+        return result.payload
 
     def create_session_token(self, request: HttpRequest) -> str:
         if not request.session.session_key:
@@ -89,4 +91,5 @@ class JWTTokenStrategy(AbstractTokenStrategy):
         else:
             next_refresh_token = refresh_token
         session.save()
+        usersessionkit.track_activity(context.request, user=user, session=session)
         return access_token, next_refresh_token
