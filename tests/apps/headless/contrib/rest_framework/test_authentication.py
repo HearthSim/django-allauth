@@ -69,7 +69,7 @@ def test_authenticate_rejects_anonymous_user_when_not_allowed(
     request = rf.get("/", HTTP_X_SESSION_TOKEN=auth_client.session_token)
 
     class StrictXSessionTokenAuthentication(XSessionTokenAuthentication):
-        allow_anonymous_user = False
+        allow_anonymous_users = False
 
     with pytest.raises(AuthenticationFailed, match="Incorrect authentication"):
         StrictXSessionTokenAuthentication().authenticate(request)

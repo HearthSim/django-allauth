@@ -27,7 +27,7 @@ class XSessionTokenAuthentication(authentication.BaseAuthentication):
 
     # These defaults match DRF's SessionAuthentication which also never returns
     # a 401/403, but relies on permission classes to do so.
-    allow_anonymous_user = True
+    allow_anonymous_users = True
     allow_invalid_session_tokens = True
 
     def authenticate(self, request: HttpRequest):
@@ -40,7 +40,7 @@ class XSessionTokenAuthentication(authentication.BaseAuthentication):
                     raise AuthenticationFailed(message)
                 return None
             if result.user is None:
-                if not self.allow_anonymous_user:
+                if not self.allow_anonymous_users:
                     raise AuthenticationFailed()
                 return None
             usersessionkit.track_activity(
@@ -50,7 +50,7 @@ class XSessionTokenAuthentication(authentication.BaseAuthentication):
         return None
 
     def authenticate_header(self, request: HttpRequest) -> str | None:
-        if not self.allow_anonymous_user or not self.allow_invalid_session_tokens:
+        if not self.allow_anonymous_users or not self.allow_invalid_session_tokens:
             return "X-Session-Token"
         return None
 

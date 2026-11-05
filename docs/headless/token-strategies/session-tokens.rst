@@ -94,7 +94,7 @@ class and set the corresponding option to ``False``:
 .. code-block:: python
 
     class StrictXSessionTokenAuthentication(XSessionTokenAuthentication):
-        allow_anonymous_user = False
+        allow_anonymous_users = False
         allow_invalid_session_tokens = False
 
 When disabled, the corresponding condition raises DRF's
