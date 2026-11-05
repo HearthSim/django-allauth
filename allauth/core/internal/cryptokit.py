@@ -51,12 +51,15 @@ def normalize_user_code(code: str) -> str:
     ).lower()
 
 
+def compare_digest_safely(actual: str, expected: str) -> bool:
+    try:
+        return secrets.compare_digest(actual, expected)
+    except TypeError:
+        # Comparing strings with non-ASCII characters is not supported
+        return False
+
+
 def compare_user_code(*, actual: str, expected: str) -> bool:
     actual = normalize_user_code(actual)
     expected = normalize_user_code(expected)
-    try:
-        return bool(expected) and secrets.compare_digest(actual, expected)
-    except TypeError:
-        # secrets.compare_digest can throw:
-        # TypeError: comparing strings with non-ASCII characters is not supported
-        return False
+    return bool(expected) and compare_digest_safely(actual, expected)

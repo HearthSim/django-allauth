@@ -273,6 +273,15 @@ def test_login_by_token(db, client, settings_with_google_provider):
                     assert socialaccount.user.email == "raymond@example.com"
 
 
+def test_login_by_token_non_ascii_csrf(db, client, settings_with_google_provider):
+    client.cookies.load({"g_csrf_token": "é"})
+    response = client.post(
+        reverse("google_login_by_token"),
+        {"credential": "dummy", "g_csrf_token": "é"},
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+
+
 @pytest.mark.parametrize(
     "id_key,verified_key",
     [

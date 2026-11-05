@@ -5,7 +5,6 @@ import binascii
 import hashlib
 import hmac
 import json
-import secrets
 import time
 
 from django.http import HttpRequest
@@ -15,6 +14,7 @@ from django.views import View
 from django.views.decorators.csrf import csrf_exempt
 
 from allauth.account.internal.decorators import login_not_required
+from allauth.core.internal.cryptokit import compare_digest_safely
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.helpers import (
     complete_social_login,
@@ -72,7 +72,7 @@ class CallbackView(View):
         auth_date = int(data.pop("auth_date"))
         auth_date_validity = provider.get_auth_date_validity()
         if (
-            not secrets.compare_digest(hash, expected_hash)
+            not compare_digest_safely(hash, expected_hash)
             or time.time() - auth_date > auth_date_validity
         ):
             return render_authentication_error(

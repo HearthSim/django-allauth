@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import requests
-import secrets
 from typing import Any
 
 from django.conf import settings
@@ -12,6 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import View
 
 from allauth.account.internal.decorators import login_not_required
+from allauth.core.internal.cryptokit import compare_digest_safely
 from allauth.socialaccount.adapter import get_adapter
 from allauth.socialaccount.helpers import (
     complete_social_login,
@@ -158,7 +158,7 @@ class LoginByTokenView(View):
         csrf_token_body = request.POST.get("g_csrf_token")
         if not csrf_token_body:
             raise PermissionDenied("No CSRF token in post body.")
-        if not secrets.compare_digest(csrf_token_cookie, csrf_token_body):
+        if not compare_digest_safely(csrf_token_cookie, csrf_token_body):
             raise PermissionDenied("Failed to verify double submit cookie.")
 
 

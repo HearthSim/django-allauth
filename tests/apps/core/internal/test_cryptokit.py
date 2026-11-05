@@ -1,6 +1,22 @@
 import pytest
 
-from allauth.core.internal.cryptokit import compare_user_code, generate_user_code
+from allauth.core.internal.cryptokit import (
+    compare_digest_safely,
+    compare_user_code,
+    generate_user_code,
+)
+
+
+@pytest.mark.parametrize(
+    "actual,expected,result",
+    [
+        ("abc", "abc", True),
+        ("abc", "def", False),
+        ("é", "é", False),
+    ],
+)
+def test_compare_digest_safely(actual, expected, result):
+    assert compare_digest_safely(actual, expected) is result
 
 
 @pytest.mark.parametrize(
