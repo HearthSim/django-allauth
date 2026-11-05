@@ -7,6 +7,7 @@ from django.forms.utils import ErrorList
 from django.http import HttpRequest, JsonResponse
 from django.utils.cache import add_never_cache_headers
 
+from allauth.headless.adapter import get_adapter
 from allauth.headless.internal import authkit, sessionkit
 
 
@@ -23,6 +24,13 @@ class APIResponse(JsonResponse):
         if data is not None:
             d["data"] = data
         meta = self._add_session_meta(request, meta)
+        meta_was_none = meta is None
+        if meta is None:
+            meta = {}
+        get_adapter().populate_response_meta(request, meta)
+        if meta_was_none and not meta:
+            # Populating did not yield anything to add.
+            meta = None
         if meta is not None:
             d["meta"] = meta
         if errors:

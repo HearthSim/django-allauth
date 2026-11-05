@@ -8,6 +8,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
 from django.forms.fields import Field
+from django.http import HttpRequest
 from django.utils.module_loading import import_string
 
 from allauth.account import app_settings as account_settings
@@ -144,6 +145,15 @@ class DefaultHeadlessAdapter(BaseAdapter):
         if account_settings.USER_MODEL_USERNAME_FIELD:
             fields.append(dc_field("username", str, "The username.", "wizard"))
         return dataclasses.make_dataclass("User", fields)
+
+    def populate_response_meta(
+        self, request: HttpRequest, meta: dict[str, Any]
+    ) -> None:
+        """
+        Populates the response metadata. Override this method to add custom
+        metadata.
+        """
+        pass
 
 
 def get_adapter() -> DefaultHeadlessAdapter:

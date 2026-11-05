@@ -17,6 +17,9 @@ Note worthy changes
 - The available reauthentication methods can now be configured using
   ``ACCOUNT_REAUTHENTICATION_METHODS``.
 
+- There is a new setting ``ACCOUNT_SIGNUP_ENABLED`` (default: ``True``) to
+  enable or disable signup.
+
 - New provider: Recharge.
 
 - Headless: Honor ``USERSESSIONS_TRACK_ACTIVITY`` for authenticated app requests,
@@ -27,8 +30,9 @@ Note worthy changes
   can now be configured to allow or reject anonymous users and invalid session
   tokens.
 
-- There is a new setting ``ACCOUNT_SIGNUP_ENABLED`` (default: ``True``) to
-  enable or disable signup.
+- Headless: Custom response metadata can now be added using the new
+  ``populate_response_meta()`` adapter method.
+
 
 
 Security notice
