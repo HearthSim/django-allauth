@@ -69,3 +69,19 @@ An example on how to use that authentication class in your own code is listed be
 
         def get(self, request):
             ...
+
+By default, invalid session tokens and sessions that do not authenticate an
+active user are ignored. This matches Django REST framework's session
+authentication behavior. To reject either case, subclass the authentication
+class and set the corresponding option to ``False``:
+
+.. code-block:: python
+
+    class StrictXSessionTokenAuthentication(XSessionTokenAuthentication):
+        allow_anonymous_user = False
+        allow_invalid_session_tokens = False
+
+When disabled, the corresponding condition raises DRF's
+``AuthenticationFailed`` exception. If this authentication class is listed
+first on the view, DRF responds with status ``401`` and an
+``X-Session-Token`` authentication challenge.

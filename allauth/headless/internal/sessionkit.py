@@ -1,15 +1,23 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from importlib import import_module
 
 from django.conf import settings
 from django.contrib.auth import SESSION_KEY
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.contrib.sessions.backends.base import SessionBase
 from django.http import HttpRequest
 
 from allauth.core.internal.sessionkit import get_session_user
 from allauth.headless import app_settings
 from allauth.headless.constants import Client
+
+
+@dataclass
+class XSessionTokenAuthenticationResult:
+    user: AbstractBaseUser | None
+    session: SessionBase
 
 
 def session_store(session_key=None) -> SessionBase:
@@ -35,14 +43,14 @@ def expose_session_token(request: HttpRequest) -> str | None:
     return None
 
 
-def authenticate_by_x_session_token(token: str) -> tuple | None:
+def authenticate_by_x_session_token(
+    token: str,
+) -> XSessionTokenAuthenticationResult | None:
     session = app_settings.TOKEN_STRATEGY.lookup_session(token)
-    if not session:
+    if session is None:
         return None
     user = get_session_user(session)
-    if user is None:
-        return None
-    return (user, session)
+    return XSessionTokenAuthenticationResult(user=user, session=session)
 
 
 def lookup_session(session_key: str) -> SessionBase | None:

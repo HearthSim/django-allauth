@@ -23,6 +23,10 @@ Note worthy changes
   the Django REST framework and Django Ninja integrations, and JWT refreshes.
   Stateless JWT access token validation continues to skip activity tracking.
 
+- Headless: The Django REST framework ``XSessionTokenAuthentication`` class can
+  now be configured to reject invalid session tokens or sessions that do not
+  authenticate an active user.
+
 
 Security notice
 ---------------

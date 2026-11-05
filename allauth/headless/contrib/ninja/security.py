@@ -22,11 +22,12 @@ class XSessionTokenAuth(AuthBase):
     def __call__(self, request: HttpRequest):
         token = self.get_session_token(request)
         if token:
-            user_session = authenticate_by_x_session_token(token)
-            if user_session:
-                user, session = user_session
-                usersessionkit.track_activity(request, user=user, session=session)
-                return user
+            result = authenticate_by_x_session_token(token)
+            if result is not None and result.user is not None:
+                usersessionkit.track_activity(
+                    request, user=result.user, session=result.session
+                )
+                return result.user
         return None
 
     def get_session_token(self, request: HttpRequest) -> str | None:
