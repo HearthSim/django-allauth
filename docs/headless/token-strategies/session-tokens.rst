@@ -41,6 +41,22 @@ An example on how to use that security class in your own code is listed below:
     def your_own_api(request):
         ...
 
+By default, missing or invalid session tokens and sessions that do not
+authenticate a user are rejected. To make authentication optional, subclass
+the security class and enable anonymous users:
+
+.. code-block:: python
+
+    from allauth.headless.contrib.ninja.security import XSessionTokenAuth
+
+    class OptionalXSessionTokenAuth(XSessionTokenAuth):
+        allow_anonymous_users = True
+
+Missing tokens and valid sessions without an authenticated user then produce
+an ``AnonymousUser``. Invalid session tokens remain rejected. To allow those as
+well, set ``allow_invalid_session_tokens = True``. In both cases,
+``request.user`` is set to the returned ``AnonymousUser``.
+
 
 Django REST framework
 ~~~~~~~~~~~~~~~~~~~~~

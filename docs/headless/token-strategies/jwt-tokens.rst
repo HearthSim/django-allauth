@@ -122,6 +122,19 @@ An example on how to use that security class in your own code is listed below:
     def your_own_api(request):
         ...
 
+By default, a missing token is rejected. To make authentication optional,
+subclass the security class and enable anonymous users:
+
+.. code-block:: python
+
+    from allauth.headless.contrib.ninja.security import JWTTokenAuth
+
+    class OptionalJWTTokenAuth(JWTTokenAuth):
+        allow_anonymous_users = True
+
+A missing token then produces an ``AnonymousUser`` and assigns it to
+``request.user``. Invalid tokens remain rejected.
+
 
 
 Django REST framework
