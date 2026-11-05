@@ -60,6 +60,9 @@ Overall
 Signup
 ******
 
+``ACCOUNT_SIGNUP_ENABLED`` (default: ``True``)
+  Controls whether users can sign up and create an account.
+
 ``ACCOUNT_SIGNUP_FIELDS`` (default: ``['username*', 'email', 'password1*', 'password2*']``)
   The list of fields to complete in the signup form: ``username``, ``email``,
   ``phone``, ``password1``, ``password2``.. Fields marked with an asterisk

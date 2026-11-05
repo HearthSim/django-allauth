@@ -27,6 +27,9 @@ Note worthy changes
   can now be configured to allow or reject anonymous users and invalid session
   tokens.
 
+- There is a new setting ``ACCOUNT_SIGNUP_ENABLED`` (default: ``True``) to
+  enable or disable signup.
+
 
 Security notice
 ---------------

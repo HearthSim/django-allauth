@@ -19,6 +19,13 @@ class PreLoginRedirectAccountAdapter(DefaultAccountAdapter):
         raise ImmediateHttpResponse(HttpResponseRedirect("/foo"))
 
 
+@pytest.mark.parametrize("enabled", [False, True])
+def test_is_open_for_signup(settings, rf, enabled):
+    settings.ACCOUNT_SIGNUP_ENABLED = enabled
+    request = rf.get("/")
+    assert DefaultAccountAdapter(request).is_open_for_signup(request) is enabled
+
+
 def test_login_attempts_cache_key_uses_lowered_login(db, rf):
     adapter = DefaultAccountAdapter()
     site = SimpleNamespace(domain="example.com")

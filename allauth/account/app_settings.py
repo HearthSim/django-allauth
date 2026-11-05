@@ -258,6 +258,10 @@ class AppSettings:
         return "password2" in self.SIGNUP_FIELDS
 
     @property
+    def SIGNUP_ENABLED(self) -> bool:
+        return self._setting("SIGNUP_ENABLED", True)
+
+    @property
     def SIGNUP_REDIRECT_URL(self) -> str:
         from django.conf import settings
 
