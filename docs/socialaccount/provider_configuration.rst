@@ -76,3 +76,26 @@ configuration::
 
 Note that provider-specific settings are documented `for each
 provider separately <providers/index.html>`__.
+
+
+.. _multiple_apps:
+
+Multiple Apps per Provider
+--------------------------
+
+Sometimes one provider needs multiple app configurations. For example, a web
+application and its native mobile application can use different client IDs.
+Flows that specify a ``client_id``, such as the headless provider token flow,
+can select the matching app. A browser redirect flow does not specify a client
+ID and therefore needs one unambiguous app configuration.
+
+In that situation, mark all app configurations except the one used by the
+browser redirect flow as hidden::
+
+    "settings": {
+        "hidden": True,
+    }
+
+Hidden apps remain available when selected explicitly by client ID, but are not
+offered as browser login options. There must be exactly one non-hidden app for a
+browser redirect flow to select.

@@ -50,6 +50,8 @@ the settings so that this app does not show up on the web::
 
     "settings": { "hidden": True, ... }
 
+See :ref:`multiple_apps` for more information.
+
 
 Note: Sign In With Apple uses a slight variation of OAuth2, which uses a POST
 instead of a GET. Unlike a GET with SameSite=Lax, the session cookie will not
